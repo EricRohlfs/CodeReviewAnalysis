@@ -41,6 +41,22 @@ var getNextLinkNoJquery = function (link) {
     return res;
 };
 
+var getProjectsRecursively = function (url, params, successCallback, projects) {
+    if (!projects) {
+        projects = [];
+    }
+    $.get(url, params).done(function (data) {
+        //projects = projects.concat(data);
+        params.page++; //advance the page number
+        if (data.length > 0) {
+            getProjectsRecursively(url, params, successCallback, projects.concat(data));
+        } else {
+            successCallback(projects);
+        }
+    });
+};
+
+
 describe('How to run tests with real dependencies', function () {
     var qs = window.location.search;
     var gitLabPrivateApiToken = getQsParam(qs, "private_token");
@@ -151,52 +167,24 @@ describe('Using mocked jQuery to get project data ', function() {
 });
 
 describe("Get Projects integration test", function () {
-    //jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
-    var nextLink, projects;
+    var projects = [];
+    //jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     var qs = window.location.search;
     var gitLabPrivateApiToken = getQsParam(qs, "private_token");
     var gitLabServer = getQsParam(qs, 'gitlab');
-    var projParams = getGitLabUrlParams(gitLabPrivateApiToken, 1, 2);
+    var projParams = getGitLabUrlParams(gitLabPrivateApiToken, 1, 2);//start with first page
     var projUrl = getProjectUrl(gitLabServer);
 
     beforeEach(function (done) {
-        //$.get(projUrl, projParams).done(function (data, status, req) {
-        //    nextLink = getNextLink(req);
-        //    projects = data;
-        //    done();
-        //});
-        var success = function(data, status, resp) {
-            nextLink = getNextLink(resp);
+        //get projects and call done when finished
+        getProjectsRecursively(projUrl, projParams, function(data) {
             projects = data;
-            done();
-        };
-
-        //$.ajax({
-        //    url: projUrl,
-        //    data: projParams,
-        //    success: success,
-        //    dataType: 'text'
-        //});
-        
-      
-
-        var url = projUrl + '?' + $.param(getGitLabUrlParams(gitLabPrivateApiToken, 1, 2));
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.onreadystatechange = function() {
-            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-                nextLink = getNextLink(xmlHttp);
-                done();
-            }
-        };
-        xmlHttp.open("GET", url, true);
-        xmlHttp.send();
+            done();//this can be omitted in production
+        });
     });
 
-    it('should return all projects', function (myArg) {
-        if (myArg != null) {
-            console.write('cool');
-        }
-        expect(projects.length).toBeGreaterThan(5);
+    it('should return all projects', function () {
+       expect(projects.length).toBeGreaterThan(5);//assuming you have more than 5 projects in your real gitlab
     });
 
 });
