@@ -169,6 +169,7 @@ describe('Using mocked jQuery to get project data ', function() {
 });
 
 describe("Get Projects integration test", function () {
+    //will request to see 2 projects at a time and loop through till no more data is returned.
     var projects = [];
     //jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
     var qs = window.location.search;
