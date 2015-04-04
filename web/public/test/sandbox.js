@@ -24,13 +24,15 @@ var getGitLabUrlParams = function (token,pageNum,perPage) {
     return reqParams;
 };
 
+
 var getNextLink = function (resp) {
-    var all = resp.getAllResponseHeaders();
+    //does not work in browser
     var link = resp.getResponseHeader('Link');
     return getNextLinkNoJquery(link);
 };
 
 var getNextLinkNoJquery = function (link) {
+    //does not work in browser, browser security
     //this method assumes that next is the first in the link
     //and proper spacing in the search
     var idx = link.search('; rel="next"');
@@ -46,10 +48,10 @@ var getProjectsRecursively = function (url, params, successCallback, projects) {
         projects = [];
     }
     $.get(url, params).done(function (data) {
-        //projects = projects.concat(data);
+        projects = projects.concat(data);
         params.page++; //advance the page number
         if (data.length > 0) {
-            getProjectsRecursively(url, params, successCallback, projects.concat(data));
+            getProjectsRecursively(url, params, successCallback, projects);
         } else {
             successCallback(projects);
         }
