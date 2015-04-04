@@ -1,0 +1,15 @@
+{
+  "name": "sinon-server-1.14.1",
+  "_cacheHeaders": {
+    "ETag": "\"20819e-10e68-51256604252c0\"",
+    "Last-Modified": "Sat, 28 Mar 2015 10:04:35 GMT",
+    "Content-Length": "69224",
+    "Content-Type": "application/javascript"
+  },
+  "_release": "e-tag:20819e-10",
+  "main": "index.js",
+  "_source": "http://sinonjs.org/releases/sinon-server-1.14.1.js",
+  "_target": "*",
+  "_originalSource": "http://sinonjs.org/releases/sinon-server-1.14.1.js",
+  "_direct": true
+}
