@@ -24,8 +24,9 @@ var getGitLabUrlParams = function (token,pageNum,perPage) {
     return reqParams;
 };
 
-var getNextLink = function (req) {
-    var link = req.getResponseHeader("link");
+var getNextLink = function (resp) {
+    var all = resp.getAllResponseHeaders();
+    var link = resp.getResponseHeader('Link');
     return getNextLinkNoJquery(link);
 };
 
@@ -125,8 +126,8 @@ describe('Using mocked jQuery to get project data ', function() {
 
     it('should get rest of projects if head link has a next url', function () {
         var nextLink;
-        $.get(projUrl, projParams).done(function(data, status, req) {
-            nextLink = getNextLink(req);
+        $.get(projUrl, projParams).done(function(data, status, resp) {
+            nextLink = getNextLink(resp);
             done();
         });
         server.respond();
@@ -137,8 +138,8 @@ describe('Using mocked jQuery to get project data ', function() {
         //I could not get $.get to make a second call so I'm just checking for a null value.
         var nextLink;
 
-        $.get(projUrl + '?' + $.param(getGitLabUrlParams(gitLabPrivateApiToken,2,2))).done(function (data, status, req) {
-            nextLink = getNextLink(req);
+        $.get(projUrl + '?' + $.param(getGitLabUrlParams(gitLabPrivateApiToken,2,2))).done(function (data, status, resp) {
+            nextLink = getNextLink(resp);
             expect(nextLink).toBeNull();
             done();
         });
@@ -146,5 +147,57 @@ describe('Using mocked jQuery to get project data ', function() {
         server.respond();
         expect(nextLink).toBeNull();
     });
+
+});
+
+describe("Get Projects integration test", function () {
+    //jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
+    var nextLink, projects;
+    var qs = window.location.search;
+    var gitLabPrivateApiToken = getQsParam(qs, "private_token");
+    var gitLabServer = getQsParam(qs, 'gitlab');
+    var projParams = getGitLabUrlParams(gitLabPrivateApiToken, 1, 2);
+    var projUrl = getProjectUrl(gitLabServer);
+
+    beforeEach(function (done) {
+        //$.get(projUrl, projParams).done(function (data, status, req) {
+        //    nextLink = getNextLink(req);
+        //    projects = data;
+        //    done();
+        //});
+        var success = function(data, status, resp) {
+            nextLink = getNextLink(resp);
+            projects = data;
+            done();
+        };
+
+        //$.ajax({
+        //    url: projUrl,
+        //    data: projParams,
+        //    success: success,
+        //    dataType: 'text'
+        //});
+        
+      
+
+        var url = projUrl + '?' + $.param(getGitLabUrlParams(gitLabPrivateApiToken, 1, 2));
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                nextLink = getNextLink(xmlHttp);
+                done();
+            }
+        };
+        xmlHttp.open("GET", url, true);
+        xmlHttp.send();
+    });
+
+    it('should return all projects', function (myArg) {
+        if (myArg != null) {
+            console.write('cool');
+        }
+        expect(projects.length).toBeGreaterThan(5);
+    });
+
 });
 
