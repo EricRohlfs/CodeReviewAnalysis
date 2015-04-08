@@ -1,0 +1,59 @@
+{
+  "name": "angular-debaser",
+  "version": "0.3.3",
+  "authors": [
+    "Christopher Hiller <chiller@decipherinc.com>"
+  ],
+  "description": "Just a better way to test AngularJS apps",
+  "main": "debaser.js",
+  "keywords": [
+    "angular",
+    "angularjs",
+    "mock",
+    "test",
+    "unit",
+    "sinon",
+    "sinonjs",
+    "stub",
+    "di",
+    "dependency",
+    "injection",
+    "mocha",
+    "chai",
+    "jasmine"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "Gruntfile.js",
+    "lib",
+    "package.json",
+    "node_modules",
+    "support",
+    "test",
+    "tasks",
+    "docs",
+    "coverage",
+    "tutorials",
+    "jsdoc.conf.json"
+  ],
+  "dependencies": {
+    "angular-mocks": "*",
+    "angular": "*"
+  },
+  "devDependencies": {
+    "angular-unstable": "1.1.5",
+    "angular-mocks-unstable": "1.1.5"
+  },
+  "homepage": "https://github.com/decipherinc/angular-debaser",
+  "_release": "0.3.3",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.3.3",
+    "commit": "c3246e557819835110ba126c24e8cd2edbe85c0c"
+  },
+  "_source": "git://github.com/decipherinc/angular-debaser.git",
+  "_target": "~0.3.3",
+  "_originalSource": "angular-debaser",
+  "_direct": true
+}
