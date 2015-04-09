@@ -17,13 +17,11 @@
 
 describe('Gitlab Projects', function () {
 
-
-
     describe('Getting all projects', function () {
         it('should build a url to get all projects ', function () {
             var glToken = "abcdefghijklmn";
             var glUrl = "https://gitlab.example.com";
-            var projParams = getGitLabUrlParams(glToken, 1, 100);
+            var projParams = getBaseGitLabUrlParams(glToken, 1, 100);
             var projUrl = getProjectUrl(glUrl) + '?' + $.param(projParams);
             expect(projUrl).toEqual('https://gitlab.example.com/api/v3/projects?per_page=100&private_token=abcdefghijklmn&page=1');
         });
@@ -36,7 +34,7 @@ describe('Gitlab Projects', function () {
             gitLabPrivateApiToken = "abcdefghijkl",
             gitLabServer = "https://gitlab.example.com";
 
-        var projParams = getGitLabUrlParams(gitLabPrivateApiToken, 1, 2);
+        var projParams = getBaseGitLabUrlParams(gitLabPrivateApiToken, 1, 2);
         var projUrl = getProjectUrl(gitLabServer);
 
         beforeEach(function () {
@@ -54,7 +52,7 @@ describe('Gitlab Projects', function () {
                     JSON.stringify(fakeData1)
                 ]);
             //needed for the get second page test with no more next pages
-            server.respondWith("GET", projUrl + '?' + $.param(getGitLabUrlParams(gitLabPrivateApiToken, 2, 2)),
+            server.respondWith("GET", projUrl + '?' + $.param(getBaseGitLabUrlParams(gitLabPrivateApiToken, 2, 2)),
                [
                    200,
                    {
@@ -80,30 +78,6 @@ describe('Gitlab Projects', function () {
             server.respond();
         });
 
-        it('should get rest of projects if head link has a next url', function () {
-            var nextLink;
-            $.get(projUrl, projParams).done(function (data, status, resp) {
-                nextLink = getNextLink(resp);
-                done();
-            });
-            server.respond();
-            expect(nextLink.length).toBeGreaterThan(5);
-        });
-
-        it('should not get rest of projects if head link does not have a next url', function () {
-            //I could not get $.get to make a second call so I'm just checking for a null value.
-            var nextLink;
-
-            $.get(projUrl + '?' + $.param(getGitLabUrlParams(gitLabPrivateApiToken, 2, 2))).done(function (data, status, resp) {
-                nextLink = getNextLink(resp);
-                expect(nextLink).toBeNull();
-                done();
-            });
-
-            server.respond();
-            expect(nextLink).toBeNull();
-        });
-
     });
 
     describe("Get Projects integration test", function () {
@@ -114,15 +88,18 @@ describe('Gitlab Projects', function () {
         var qs = window.location.search;
         var gitLabPrivateApiToken = getQsParam(qs, "private_token");
         var gitLabServer = getQsParam(qs, 'gitlab');
-        var projParams = getGitLabUrlParams(gitLabPrivateApiToken, 1, 2);//start with first page
+        var projParams = getBaseGitLabUrlParams(gitLabPrivateApiToken, 1, 2);//start with first page
         var projUrl = getProjectUrl(gitLabServer);
-
+       
         beforeEach(function (done) {
-            //get projects and call done when finished
-            getProjectsRecursively(projUrl, projParams, function (data) {
+
+            var callBack = function(data) {
                 projects = data;
-                done();//this can be omitted in production
-            });
+                done(); //this can be omitted in production
+            };
+            var data1 = new Array();
+            //get projects and call done when finished
+            getDataRecursively(projUrl, projParams,callBack,data1 );
         });
 
         it('should return all projects', function () {
@@ -131,4 +108,83 @@ describe('Gitlab Projects', function () {
 
     });
 
+});
+
+
+
+describe('appendToOrig', function () {
+    it('should add new data to the list of old data', function () {
+        var orig = new Array({ 'foo': 'bar' });
+        var newData = new Array({ 'foo': 'bar1' });
+        appendToOrig(orig, newData);
+        expect(orig[1].foo).toBe('bar1');
+    });
+});
+
+
+describe('makeNextCall', function () {
+    var goGetterTestImplementation,
+        newData, data, url, params, completedSpy;
+    beforeEach(function () {
+        newData = [{ 'foo': 'bar' }, { 'foo': 'bar1' }],
+        data = new Array(),
+        url = 'https://gitlab.example.com';
+        params = getMergeReqParams("abc", 1, 2);
+        completedSpy = sinon.spy();
+
+        goGetterTestImplementation = function (url1, params1, completedCallback1, data1) {
+            var newData1 = new Array();
+            if (data1.length < 3) {
+                newData1.push({ 'foo': 'bar3' });
+                newData1.push({ 'foo': 'bar4' });
+            }
+            makeNextCall(newData1, data1, url1, params1, completedCallback1, goGetterTestImplementation);
+        };
+    });
+
+    var getNumberOfTimesImplWasCalled = function () {
+        //works because params is an object so it is passed by ref
+        //makeNextCall increments the page number if the last call had newData
+        //we always start with page 1 so we have to back that out.
+        return params.page - 1;
+    };
+
+    it('should increment the pageNumber if newData has new data', function () {
+        makeNextCall(newData, data, url, params, completedSpy, goGetterTestImplementation);
+        expect(params.page).toEqual(3);
+    });
+
+    it('should keep appending data untill no more data is returned from the goGetter and then invoke completedCallback.', function () {
+        makeNextCall(newData, data, url, params, completedSpy, goGetterTestImplementation);
+        expect(data.length).toBeGreaterThan(3);
+        expect(getNumberOfTimesImplWasCalled()).toEqual(2);
+        sinon.assert.calledOnce(completedSpy);
+    });
+});
+
+
+describe('Gitlab Merge Request API', function () {
+
+    it('should return url for merge request minus the query string', function () {
+        var expectedUrl = "https://gitlab.example.com:8088/api/v3/projects/29/merge_requests",
+            projectId = 29,
+            host = 'https://gitlab.example.com:8088';
+
+        var actualUrl = getMergeRequestUrl(host, projectId);
+        expect(actualUrl).toBe(expectedUrl);
+    });
+
+    it('should return params needed for merge request api call', function () {
+        //after we run the object through the params in jquery we should have the following:  state=all&page=2&per_page=100&private_token=abc"
+        var token = 'abc',
+             page = 1,
+             perPage = 100;
+
+        var p = getMergeReqParams(token, page, perPage);
+
+        expect(p['private_token']).toBe('abc');
+        expect(p['page']).toBe(1);
+        expect(p['per_page']).toBe(100);
+        expect(p['state']).toBe('all');
+    });
 });
