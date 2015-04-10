@@ -80,33 +80,7 @@ describe('Gitlab Projects', function () {
 
     });
 
-    describe("Get Projects integration test", function () {
-        //This will fail unless private_token and gitlab are set in the testing url
-        //will request to see 2 projects at a time and loop through till no more data is returned.
-        var projects = [];
-        //jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-        var qs = window.location.search;
-        var gitLabPrivateApiToken = getQsParam(qs, "private_token");
-        var gitLabServer = getQsParam(qs, 'gitlab');
-        var projParams = getBaseGitLabUrlParams(gitLabPrivateApiToken, 1, 2);//start with first page
-        var projUrl = getProjectUrl(gitLabServer);
-       
-        beforeEach(function (done) {
 
-            var callBack = function(data) {
-                projects = data;
-                done(); //this can be omitted in production
-            };
-            var data1 = new Array();
-            //get projects and call done when finished
-            getDataRecursively(projUrl, projParams,callBack,data1 );
-        });
-
-        it('should return all projects', function () {
-            expect(projects.length).toBeGreaterThan(5);//assuming you have more than 5 projects in your real gitlab
-        });
-
-    });
 
 });
 
@@ -131,14 +105,17 @@ describe('makeNextCall', function () {
         url = 'https://gitlab.example.com';
         params = getMergeReqParams("abc", 1, 2);
         completedSpy = sinon.spy();
+        var bag = {};
+        bag.requests = new Array();
 
-        goGetterTestImplementation = function (url1, params1, completedCallback1, data1) {
+        goGetterTestImplementation = function (url1, params1, completedCallback1, data1, bag1) {
             var newData1 = new Array();
             if (data1.length < 3) {
                 newData1.push({ 'foo': 'bar3' });
                 newData1.push({ 'foo': 'bar4' });
             }
-            makeNextCall(newData1, data1, url1, params1, completedCallback1, goGetterTestImplementation);
+            bag1.count++;
+            makeNextCall(newData1, data1, url1, params1, completedCallback1, goGetterTestImplementation,bag1 );
         };
     });
 
@@ -150,18 +127,33 @@ describe('makeNextCall', function () {
     };
 
     it('should increment the pageNumber if newData has new data', function () {
-        makeNextCall(newData, data, url, params, completedSpy, goGetterTestImplementation);
+        var bag = {};
+        bag.requests = new Array();
+        makeNextCall(newData, data, url, params, completedSpy, goGetterTestImplementation, bag);
         expect(params.page).toEqual(3);
     });
 
     it('should keep appending data untill no more data is returned from the goGetter and then invoke completedCallback.', function () {
-        makeNextCall(newData, data, url, params, completedSpy, goGetterTestImplementation);
+        var bag = {};
+        bag.requests = new Array();
+        makeNextCall(newData, data, url, params, completedSpy, goGetterTestImplementation, bag);
         expect(data.length).toBeGreaterThan(3);
         expect(getNumberOfTimesImplWasCalled()).toEqual(2);
         sinon.assert.calledOnce(completedSpy);
     });
-});
+    
+    it('completedCallback should return bag with user defined data from http request.', function () {
+        var bag = {};
+        bag.count = 0;
+        var completed = function(data1,bag1) {
+            bag1.count++;
+        };
 
+        makeNextCall(newData, data, url, params, completed, goGetterTestImplementation, bag);
+        expect(bag.count).toEqual(3);
+    });
+    
+});
 
 describe('Gitlab Merge Request API', function () {
 
@@ -187,4 +179,76 @@ describe('Gitlab Merge Request API', function () {
         expect(p['per_page']).toBe(100);
         expect(p['state']).toBe('all');
     });
+});
+
+describe("addRequestsToBag", function() {
+    it('should do nothing is bag is undefined or null', function() {
+
+    });
+
+    it('should do nothing if bag is defined bur requests is not defined.', function() {
+
+    });
+    it('should add a request with the current url and params', function() {
+
+    });
+});
+
+describe("getDataRecursively", function() {
+    var server,
+        url = "https://gitlab.example.com",
+        params = { page: 1 },
+        params2 = {page:2},
+        data = new Array(),
+        bag = {
+            page: 1,
+            requests: new Array()
+        };
+    
+    beforeEach(function () {
+        server = sinon.fakeServer.create();
+        server.autoRespond = true;
+        //first call with data
+        server.respondWith("GET", url + '?' + $.param(params),
+            [
+                200,
+                {"Content-Type": "application/json"},
+                JSON.stringify([{id:1},{id:2}])
+            ]);
+        //advance page and this call does not return any data.
+        server.respondWith("GET", url + '?' + $.param(params2),
+           [
+               200,
+               { "Content-Type": "application/json" },
+               JSON.stringify([])
+           ]);
+    });
+
+    afterEach(function () {
+        server.restore();
+    });
+    
+    it('should call a function to add the current http request to the bag', function (done) {
+        var completed = function (data1, bag1) {
+            expect(bag1.requests.length).toEqual(2);
+            done();
+        };
+
+        var preGetHook = function (url1, params1, data1, bag1) {
+            addRequestToBag(url1, params1, bag1);
+        };
+        getDataRecursively(url, params, completed, data, bag, preGetHook) ;
+        server.respond();
+    });
+
+    it('should call $.get which should call the callback function', function() {
+        var completed = function (data1, bag1) {
+            done();
+        };
+        var callback = sinon.spy(completed);
+        getDataRecursively(url, params, callback, data, bag);
+        server.respond();
+        sinon.assert.calledOnce(callback);
+    });
+
 });
