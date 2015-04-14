@@ -1,7 +1,9 @@
-﻿describe('How to run tests with real dependencies', function () {
+﻿var gn = glNext();
+describe('How to run tests with real dependencies', function () {
+  
     var qs = window.location.search;
-    var gitLabPrivateApiToken = getQsParam(qs, "private_token");
-    var gitLabServer = getQsParam(qs, 'gitlab');
+    var gitLabPrivateApiToken = gn.getQsParam(qs, "private_token");
+    var gitLabServer = gn.getQsParam(qs, 'gitlab');
 
     //example: http://localhost:3000/test/unit.html?private_token=abcdefghijklmn
     it('should get the private gitlab api token from url in tests so it is not checked into the source code', function () {
@@ -21,8 +23,8 @@ describe('Gitlab Projects', function () {
         it('should build a url to get all projects ', function () {
             var glToken = "abcdefghijklmn";
             var glUrl = "https://gitlab.example.com";
-            var projParams = getBaseGitLabUrlParams(glToken, 1, 100);
-            var projUrl = getProjectUrl(glUrl) + '?' + $.param(projParams);
+            var projParams =gn.getBaseGitLabUrlParams(glToken, 1, 100);
+            var projUrl = gn.getProjectUrl(glUrl) + '?' + $.param(projParams);
             expect(projUrl).toEqual('https://gitlab.example.com/api/v3/projects?per_page=100&private_token=abcdefghijklmn&page=1');
         });
     });
@@ -34,8 +36,8 @@ describe('Gitlab Projects', function () {
             gitLabPrivateApiToken = "abcdefghijkl",
             gitLabServer = "https://gitlab.example.com";
 
-        var projParams = getBaseGitLabUrlParams(gitLabPrivateApiToken, 1, 2);
-        var projUrl = getProjectUrl(gitLabServer);
+        var projParams =gn.getBaseGitLabUrlParams(gitLabPrivateApiToken, 1, 2);
+        var projUrl = gn.getProjectUrl(gitLabServer);
 
         beforeEach(function () {
             server = sinon.fakeServer.create();
@@ -52,7 +54,7 @@ describe('Gitlab Projects', function () {
                     JSON.stringify(fakeData1)
                 ]);
             //needed for the get second page test with no more next pages
-            server.respondWith("GET", projUrl + '?' + $.param(getBaseGitLabUrlParams(gitLabPrivateApiToken, 2, 2)),
+            server.respondWith("GET", projUrl + '?' + $.param(gn.getBaseGitLabUrlParams(gitLabPrivateApiToken, 2, 2)),
                [
                    200,
                    {
