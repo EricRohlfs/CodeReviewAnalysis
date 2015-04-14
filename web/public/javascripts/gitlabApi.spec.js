@@ -92,7 +92,7 @@ describe('appendToOrig', function () {
     it('should add new data to the list of old data', function () {
         var orig = new Array({ 'foo': 'bar' });
         var newData = new Array({ 'foo': 'bar1' });
-        appendToOrig(orig, newData);
+        gn.appendToOrig(orig, newData);
         expect(orig[1].foo).toBe('bar1');
     });
 });
@@ -105,7 +105,7 @@ describe('makeNextCall', function () {
         newData = [{ 'foo': 'bar' }, { 'foo': 'bar1' }],
         data = new Array(),
         url = 'https://gitlab.example.com';
-        params = getMergeReqParams("abc", 1, 2);
+        params = gn.getMergeReqParams("abc", 1, 2);
         completedSpy = sinon.spy();
         var bag = {};
         bag.requests = new Array();
@@ -117,7 +117,7 @@ describe('makeNextCall', function () {
                 newData1.push({ 'foo': 'bar4' });
             }
             bag1.count++;
-            makeNextCall(newData1, data1, url1, params1, completedCallback1, goGetterTestImplementation,bag1 );
+            gn.makeNextCall(newData1, data1, url1, params1, completedCallback1, goGetterTestImplementation,bag1 );
         };
     });
 
@@ -131,14 +131,14 @@ describe('makeNextCall', function () {
     it('should increment the pageNumber if newData has new data', function () {
         var bag = {};
         bag.requests = new Array();
-        makeNextCall(newData, data, url, params, completedSpy, goGetterTestImplementation, bag);
+        gn.makeNextCall(newData, data, url, params, completedSpy, goGetterTestImplementation, bag);
         expect(params.page).toEqual(3);
     });
 
     it('should keep appending data untill no more data is returned from the goGetter and then invoke completedCallback.', function () {
         var bag = {};
         bag.requests = new Array();
-        makeNextCall(newData, data, url, params, completedSpy, goGetterTestImplementation, bag);
+        gn.makeNextCall(newData, data, url, params, completedSpy, goGetterTestImplementation, bag);
         expect(data.length).toBeGreaterThan(3);
         expect(getNumberOfTimesImplWasCalled()).toEqual(2);
         sinon.assert.calledOnce(completedSpy);
@@ -151,7 +151,7 @@ describe('makeNextCall', function () {
             bag1.count++;
         };
 
-        makeNextCall(newData, data, url, params, completed, goGetterTestImplementation, bag);
+        gn.makeNextCall(newData, data, url, params, completed, goGetterTestImplementation, bag);
         expect(bag.count).toEqual(3);
     });
     
@@ -174,7 +174,7 @@ describe('Gitlab Merge Request API', function () {
              page = 1,
              perPage = 100;
 
-        var p = getMergeReqParams(token, page, perPage);
+        var p = gn.getMergeReqParams(token, page, perPage);
 
         expect(p['private_token']).toBe('abc');
         expect(p['page']).toBe(1);
@@ -237,9 +237,9 @@ describe("getDataRecursively", function() {
         };
 
         var preGetHook = function (url1, params1, data1, bag1) {
-            addRequestToBag(url1, params1, bag1);
+            gn.addRequestToBag(url1, params1, bag1);
         };
-        getDataRecursively(url, params, completed, data, bag, preGetHook) ;
+        gn.getDataRecursively(url, params, completed, data, bag, preGetHook) ;
         server.respond();
     });
 
@@ -248,7 +248,7 @@ describe("getDataRecursively", function() {
             done();
         };
         var callback = sinon.spy(completed);
-        getDataRecursively(url, params, callback, data, bag);
+        gn.getDataRecursively(url, params, callback, data, bag);
         server.respond();
         sinon.assert.calledOnce(callback);
     });
