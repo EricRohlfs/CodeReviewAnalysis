@@ -16,7 +16,7 @@ describe("Get Projects integration test", function () {
             projects = data;
             done(); //this can be omitted in production
         };
-        var data1 = new Array();
+        var data1 = [];
         //get projects and call done when finished
         gn.getDataRecursively(projUrl, projParams, callBack, data1);
     });
@@ -31,8 +31,8 @@ describe("Get all Merge Requests for all projects integration test", function ()
     //This will fail unless private_token and gitlab are set in the testing url
     //will request to see 2 projects at a time and loop through till no more data is returned.
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000; //might need to adjust timeout based on integration test environment
-    var allMergeRequests = new Array(), //all merge requests when done
-        initialMergeRequestCalls = new Array();//place to hold the original merge request with the first page number, basically creates a distinct list to later compare all merge requests against to know when we are done.
+    var allMergeRequests = [], //all merge requests when done
+        initialMergeRequestCalls = [];//place to hold the original merge request with the first page number, basically creates a distinct list to later compare all merge requests against to know when we are done.
     
     var qs = window.location.search;
     var gitLabPrivateApiToken = gn.getQsParam(qs, "private_token");
@@ -57,13 +57,13 @@ describe("Get all Merge Requests for all projects integration test", function ()
                 for (var i = 0; i < initialMergeRequestCalls.length; i++) {
                     var reqUrl  = initialMergeRequestCalls[i].url;
                     var bagUrl = bag1.requests[j].url;
-                    if (reqUrl == bagUrl) {
+                    if (reqUrl === bagUrl) {
                         initialMergeRequestCalls.splice(i, 1);
                         break;
                     }
                 }
             }
-            if (initialMergeRequestCalls.length == 0) {
+            if (initialMergeRequestCalls.length === 0) {
                 done();
             }
         };
@@ -80,11 +80,11 @@ describe("Get all Merge Requests for all projects integration test", function ()
         var afterProjects = function (projectsCalled) {
             for (var i = 0; i < projectsCalled.length; i++) {
                 var mrBag = {}; // bag to hold merge request stuff
-                mrBag.requests = new Array(); //we need a list of all the requests made so we can later ensure we have all the data before saying we are done. 
+                mrBag.requests = []; //we need a list of all the requests made so we can later ensure we have all the data before saying we are done. 
                 var mergeReqParams = gn.getMergeReqParams(gitLabPrivateApiToken, 1, 3); //start with first page and return 3 items per request
                 var mergeReqUrl = gn.getMergeRequestUrl(gitLabServer, projectsCalled[i].id);
                 storeRequestForLater(mergeReqUrl, mergeReqParams);
-                gn.getDataRecursively(mergeReqUrl, mergeReqParams, mergeReqCompleteCallback, new Array(), mrBag, preGetHook);
+                gn.getDataRecursively(mergeReqUrl, mergeReqParams, mergeReqCompleteCallback, [], mrBag, preGetHook);
             }
         };
         
@@ -97,7 +97,7 @@ describe("Get all Merge Requests for all projects integration test", function ()
             };
             var projParams = gn.getBaseGitLabUrlParams(gitLabPrivateApiToken, 1, 2);//start with first page and return 2 projects per request
             var projUrl = gn.getProjectUrl(gitLabServer);
-            var dataProj = new Array();
+            var dataProj = [];
             //get projects and call done when finished
             gn.getDataRecursively(projUrl, projParams, callBack, dataProj);
         };
