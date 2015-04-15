@@ -222,8 +222,8 @@ var glNext = function () {
  * @returns {function} setInitialMergeRequestCalls
 */
 var getAllMergeRequestsForAllProjects = function (callBack, requestImplementation,qs,gn) {
-    var allMergeRequests = new Array(), //all merge requests when done
-        initialMergeRequestCalls = new Array(), //place to hold the original merge request with the first page number, basically creates a distinct list to later compare all merge requests against to know when we are done.
+    var allMergeRequests = [], //all merge requests when done
+        initialMergeRequestCalls = [], //place to hold the original merge request with the first page number, basically creates a distinct list to later compare all merge requests against to know when we are done.
         gitLabPrivateApiToken = gn.getQsParam(qs, "private_token"),
         gitLabServer = gn.getQsParam(qs, 'gitlab');
 
@@ -258,14 +258,14 @@ var getAllMergeRequestsForAllProjects = function (callBack, requestImplementatio
             for (var i = 0; i < initialMergeRequestCalls.length; i++) {
                 var reqUrl = initialMergeRequestCalls[i].url;
                 var bagUrl = bag.requests[j].url;
-                if (reqUrl == bagUrl) {
+                if (reqUrl === bagUrl) {
                     initialMergeRequestCalls.splice(i, 1); //remove the found match
                     break;
                 }
             }
         }
         
-        if (initialMergeRequestCalls.length == 0) {
+        if (initialMergeRequestCalls.length === 0) {
             callBack(allMergeRequests);
         }
     };
@@ -293,14 +293,14 @@ var getAllMergeRequestsForAllProjects = function (callBack, requestImplementatio
      */
     var getMergeRequestsForEachProject = function (projectsCalled) {
         for (var i = 0; i < projectsCalled.length; i++) {
-            var mrBag = { requests: new Array() }; // bag to hold merge request stuff and we need a list of all the requests made so we can later ensure we have all the data before saying we are done. 
+            var mrBag = { requests: [] }; // bag to hold merge request stuff and we need a list of all the requests made so we can later ensure we have all the data before saying we are done. 
             var mergeReqParams = gn.getMergeReqParams(gitLabPrivateApiToken, 1, 100); //start with first page and return 3 items per request
             var mergeReqUrl = gn.getMergeRequestUrl(gitLabServer, projectsCalled[i].id);
             initialMergeRequestCalls.push({
                 url: mergeReqUrl,
                 params: mergeReqParams
             });
-            gn.getDataRecursively(mergeReqUrl, mergeReqParams, mergeReqCompleteCallback, new Array(), mrBag, addRequestToBag);
+            gn.getDataRecursively(mergeReqUrl, mergeReqParams, mergeReqCompleteCallback, [], mrBag, addRequestToBag);
         }
     };
 
@@ -318,7 +318,7 @@ var getAllMergeRequestsForAllProjects = function (callBack, requestImplementatio
         };
         var projParams = gn.getBaseGitLabUrlParams(gitLabPrivateApiToken, 1, 100);
         var projUrl = gn.getProjectUrl(gitLabServer);
-        var dataProj = new Array();
+        var dataProj = [];
         //get projects and call done when finished
         requestImplementation(projUrl, projParams, projCallback, dataProj);
     };

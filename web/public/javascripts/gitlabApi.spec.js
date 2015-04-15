@@ -100,13 +100,13 @@ describe('makeNextCall', function () {
         completedSpy;
     beforeEach(function () {
         newData = [{ 'foo': 'bar' }, { 'foo': 'bar1' }],
-        data = new Array(),
+        data = [],
         url = 'https://gitlab.example.com';
         params = gn.getMergeReqParams("abc", 1, 2);
         completedSpy = sinon.spy();
 
         implementation = function (url1, params1, completedCallback1, data1, bag1) {
-            var newData1 = new Array();
+            var newData1 = [];
             if (data1.length < 3) {
                 newData1.push({ 'foo': 'bar3' });
                 newData1.push({ 'foo': 'bar4' });
@@ -125,14 +125,14 @@ describe('makeNextCall', function () {
 
     it('should increment the pageNumber if newData has new data', function () {
         var bag = {};
-        bag.requests = new Array();
+        bag.requests = [];
         gn.makeNextCall(newData, data, url, params, completedSpy, implementation, bag);
         expect(params.page).toEqual(3);
     });
 
     it('should keep appending data untill no more data is returned from the goGetter and then invoke completedCallback.', function () {
         var bag = {};
-        bag.requests = new Array();
+        bag.requests = [];
         gn.makeNextCall(newData, data, url, params, completedSpy, implementation, bag);
         expect(data.length).toBeGreaterThan(3);
         expect(getNumberOfTimesImplWasCalled()).toEqual(2);
@@ -171,10 +171,10 @@ describe('Gitlab Merge Request API', function () {
 
         var p = gn.getMergeReqParams(token, page, perPage);
 
-        expect(p['private_token']).toBe('abc');
-        expect(p['page']).toBe(1);
-        expect(p['per_page']).toBe(100);
-        expect(p['state']).toBe('all');
+        expect(p.private_token).toBe('abc');
+        expect(p.page).toBe(1);
+        expect(p.per_page).toBe(100);
+        expect(p.state).toBe('all');
     });
 });
 
@@ -196,10 +196,10 @@ describe("getDataRecursively", function() {
         url = "https://gitlab.example.com",
         params = { page: 1 },
         params2 = {page:2},
-        data = new Array(),
+        data = [],
         bag = {
             page: 1,
-            requests: new Array()
+            requests: []
         };
     
     beforeEach(function () {
@@ -304,14 +304,14 @@ describe("getAllMergeRequestsForAllProjects", function () {
     describe('getMergeRequestForEachProject', function () {
         var any = sinon.match.any;
         var emptyArray = sinon.match(function (value) {
-            if (value.length == 0) {
+            if (value.length === 0) {
                 return true;
             }
             return false;
         }, 'emptyArray');
 
 
-        var projects = new Array();
+        var projects = [];
         //make array with 5 items
         for (var i = 0; i < 5; i++) {
             var project1 = {id:i};
@@ -335,7 +335,7 @@ describe("getAllMergeRequestsForAllProjects", function () {
         });
         it('bag should be initialized with requests initialized as new array ', function () {
             var hasEmptyRequestArray = sinon.match(function (value) {
-                if (value.requests.length == 0) {
+                if (value.requests.length === 0) {
                     return true;
                 }
                 return false;
@@ -346,7 +346,7 @@ describe("getAllMergeRequestsForAllProjects", function () {
         });
         it('bag should get 100 items per request ', function () {
             var validate = sinon.match(function (value) {
-                if (value.per_page == 100) {
+                if (value.per_page === 100) {
                     return true;
                 }
                 return false;
@@ -360,7 +360,7 @@ describe("getAllMergeRequestsForAllProjects", function () {
             var validate = sinon.match(function (value) {
                 var match = false;
                 for (var j = 0; j < 5; j++) {
-                    if(value == j) {
+                    if(value === j) {
                         match = true;
                         break;
                     }
@@ -377,7 +377,7 @@ describe("getAllMergeRequestsForAllProjects", function () {
             it('should call appendToOrig if there is data', function() {
                 gnMock.expects('appendToOrig').exactly(1).withArgs(sinon.match.array, sinon.match.array);
                 var data = [{ id: 1 }];
-                gamr.mergeReqCompleteCallback(data, { requests: new Array() });
+                gamr.mergeReqCompleteCallback(data, { requests: [] });
                 gnMock.verify();
             });
             
