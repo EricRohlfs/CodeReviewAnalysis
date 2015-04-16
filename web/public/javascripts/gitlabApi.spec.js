@@ -1,7 +1,9 @@
-﻿describe('How to run tests with real dependencies', function () {
+﻿var gn = glNext();
+describe('How to run tests with real dependencies', function () {
+  
     var qs = window.location.search;
-    var gitLabPrivateApiToken = getQsParam(qs, "private_token");
-    var gitLabServer = getQsParam(qs, 'gitlab');
+    var gitLabPrivateApiToken = gn.getQsParam(qs, "private_token");
+    var gitLabServer = gn.getQsParam(qs, 'gitlab');
 
     //example: http://localhost:3000/test/unit.html?private_token=abcdefghijklmn
     it('should get the private gitlab api token from url in tests so it is not checked into the source code', function () {
@@ -19,10 +21,10 @@ describe('Gitlab Projects', function () {
 
     describe('Getting all projects', function () {
         it('should build a url to get all projects ', function () {
-            var glToken = "abcdefghijklmn";
-            var glUrl = "https://gitlab.example.com";
-            var projParams = getBaseGitLabUrlParams(glToken, 1, 100);
-            var projUrl = getProjectUrl(glUrl) + '?' + $.param(projParams);
+            var glToken = "abcdefghijklmn",
+                glUrl = "https://gitlab.example.com";
+            var projParams = gn.getBaseGitLabUrlParams(glToken, 1, 100);
+            var projUrl = gn.getProjectUrl(glUrl) + '?' + $.param(projParams);
             expect(projUrl).toEqual('https://gitlab.example.com/api/v3/projects?per_page=100&private_token=abcdefghijklmn&page=1');
         });
     });
@@ -34,8 +36,8 @@ describe('Gitlab Projects', function () {
             gitLabPrivateApiToken = "abcdefghijkl",
             gitLabServer = "https://gitlab.example.com";
 
-        var projParams = getBaseGitLabUrlParams(gitLabPrivateApiToken, 1, 2);
-        var projUrl = getProjectUrl(gitLabServer);
+        var projParams =gn.getBaseGitLabUrlParams(gitLabPrivateApiToken, 1, 2);
+        var projUrl = gn.getProjectUrl(gitLabServer);
 
         beforeEach(function () {
             server = sinon.fakeServer.create();
@@ -52,7 +54,7 @@ describe('Gitlab Projects', function () {
                     JSON.stringify(fakeData1)
                 ]);
             //needed for the get second page test with no more next pages
-            server.respondWith("GET", projUrl + '?' + $.param(getBaseGitLabUrlParams(gitLabPrivateApiToken, 2, 2)),
+            server.respondWith("GET", projUrl + '?' + $.param(gn.getBaseGitLabUrlParams(gitLabPrivateApiToken, 2, 2)),
                [
                    200,
                    {
@@ -77,45 +79,40 @@ describe('Gitlab Projects', function () {
             });
             server.respond();
         });
-
     });
-
-
-
 });
-
-
 
 describe('appendToOrig', function () {
     it('should add new data to the list of old data', function () {
         var orig = new Array({ 'foo': 'bar' });
         var newData = new Array({ 'foo': 'bar1' });
-        appendToOrig(orig, newData);
+        gn.appendToOrig(orig, newData);
         expect(orig[1].foo).toBe('bar1');
     });
 });
 
-
 describe('makeNextCall', function () {
-    var goGetterTestImplementation,
-        newData, data, url, params, completedSpy;
+    var implementation,
+        newData,
+        data,
+        url,
+        params,
+        completedSpy;
     beforeEach(function () {
         newData = [{ 'foo': 'bar' }, { 'foo': 'bar1' }],
-        data = new Array(),
+        data = [],
         url = 'https://gitlab.example.com';
-        params = getMergeReqParams("abc", 1, 2);
+        params = gn.getMergeReqParams("abc", 1, 2);
         completedSpy = sinon.spy();
-        var bag = {};
-        bag.requests = new Array();
 
-        goGetterTestImplementation = function (url1, params1, completedCallback1, data1, bag1) {
-            var newData1 = new Array();
+        implementation = function (url1, params1, completedCallback1, data1, bag1) {
+            var newData1 = [];
             if (data1.length < 3) {
                 newData1.push({ 'foo': 'bar3' });
                 newData1.push({ 'foo': 'bar4' });
             }
             bag1.count++;
-            makeNextCall(newData1, data1, url1, params1, completedCallback1, goGetterTestImplementation,bag1 );
+            gn.makeNextCall(newData1, data1, url1, params1, completedCallback1, implementation,bag1 );
         };
     });
 
@@ -128,15 +125,15 @@ describe('makeNextCall', function () {
 
     it('should increment the pageNumber if newData has new data', function () {
         var bag = {};
-        bag.requests = new Array();
-        makeNextCall(newData, data, url, params, completedSpy, goGetterTestImplementation, bag);
+        bag.requests = [];
+        gn.makeNextCall(newData, data, url, params, completedSpy, implementation, bag);
         expect(params.page).toEqual(3);
     });
 
     it('should keep appending data untill no more data is returned from the goGetter and then invoke completedCallback.', function () {
         var bag = {};
-        bag.requests = new Array();
-        makeNextCall(newData, data, url, params, completedSpy, goGetterTestImplementation, bag);
+        bag.requests = [];
+        gn.makeNextCall(newData, data, url, params, completedSpy, implementation, bag);
         expect(data.length).toBeGreaterThan(3);
         expect(getNumberOfTimesImplWasCalled()).toEqual(2);
         sinon.assert.calledOnce(completedSpy);
@@ -149,7 +146,7 @@ describe('makeNextCall', function () {
             bag1.count++;
         };
 
-        makeNextCall(newData, data, url, params, completed, goGetterTestImplementation, bag);
+        gn.makeNextCall(newData, data, url, params, completed, implementation, bag);
         expect(bag.count).toEqual(3);
     });
     
@@ -162,7 +159,7 @@ describe('Gitlab Merge Request API', function () {
             projectId = 29,
             host = 'https://gitlab.example.com:8088';
 
-        var actualUrl = getMergeRequestUrl(host, projectId);
+        var actualUrl = gn.getMergeRequestUrl(host, projectId);
         expect(actualUrl).toBe(expectedUrl);
     });
 
@@ -172,12 +169,12 @@ describe('Gitlab Merge Request API', function () {
              page = 1,
              perPage = 100;
 
-        var p = getMergeReqParams(token, page, perPage);
+        var p = gn.getMergeReqParams(token, page, perPage);
 
-        expect(p['private_token']).toBe('abc');
-        expect(p['page']).toBe(1);
-        expect(p['per_page']).toBe(100);
-        expect(p['state']).toBe('all');
+        expect(p.private_token).toBe('abc');
+        expect(p.page).toBe(1);
+        expect(p.per_page).toBe(100);
+        expect(p.state).toBe('all');
     });
 });
 
@@ -199,10 +196,10 @@ describe("getDataRecursively", function() {
         url = "https://gitlab.example.com",
         params = { page: 1 },
         params2 = {page:2},
-        data = new Array(),
+        data = [],
         bag = {
             page: 1,
-            requests: new Array()
+            requests: []
         };
     
     beforeEach(function () {
@@ -235,20 +232,174 @@ describe("getDataRecursively", function() {
         };
 
         var preGetHook = function (url1, params1, data1, bag1) {
-            addRequestToBag(url1, params1, bag1);
+            gn.addRequestToBag(url1, params1, bag1);
         };
-        getDataRecursively(url, params, completed, data, bag, preGetHook) ;
+        gn.getDataRecursively(url, params, completed, data, bag, preGetHook) ;
         server.respond();
     });
 
     it('should call $.get which should call the callback function', function() {
         var completed = function (data1, bag1) {
+            console.log(data1);
+            console.log(bag1);
             done();
         };
         var callback = sinon.spy(completed);
-        getDataRecursively(url, params, callback, data, bag);
+        gn.getDataRecursively(url, params, callback, data, bag);
         server.respond();
         sinon.assert.calledOnce(callback);
     });
+
+});
+
+describe("getAllMergeRequestsForAllProjects", function () {
+    var stubArgs, gamr, gnMock,
+        completeCallBackStub;
+
+    var stubImpl = function (url, params, callback, data) {
+        stubArgs = {
+            url: url,
+            params: params,
+            callback: callback,
+            data: data
+        };
+        callback(data);//we only need to invoke the callback
+    };
+    
+    beforeEach(function () {
+        completeCallBackStub = sinon.stub();
+        var g = glNext();
+        gnMock = sinon.mock(g);
+        gamr = getAllMergeRequestsForAllProjects(completeCallBackStub, stubImpl, "private_token=abcdefg&gitlab=https://gitlab.example.com",gnMock.object);
+    });
+
+    afterEach(function () {
+        gnMock.restore();
+    });
+
+    describe("getAllProjects", function () {
+        
+        it('should have a function getAllProjects', function () {
+            expect(gamr.getAllProjects).toBeDefined();
+        });
+    
+        /* @param {function} done is part of Jasmine */
+        it('should call callbacks with data', function (done) {
+            var completed = function (data) {
+                expect(data).toBeDefined();
+                done();// tell jasmine we are finished.
+            };
+            gamr.getAllProjects(completed);
+        });
+        
+        it('should get 100 items per call', function (done) {
+            var completed = function () {
+                expect(stubArgs.params.per_page).toEqual(100);
+                done();// tell jasmine we are finished.
+            };
+            gamr.getAllProjects(completed);
+        });
+    });
+
+    describe('getMergeRequestForEachProject', function () {
+        var any = sinon.match.any;
+        var emptyArray = sinon.match(function (value) {
+            if (value.length === 0) {
+                return true;
+            }
+            return false;
+        }, 'emptyArray');
+
+
+        var projects = [];
+        //make array with 5 items
+        for (var i = 0; i < 5; i++) {
+            var project1 = {id:i};
+            projects.push(project1);
+        }
+
+        it('should make a call for each project in array', function() {
+            gnMock.expects('getDataRecursively').exactly(5);
+            gamr.getMergeRequestsForEachProject(projects);
+            gnMock.verify();
+        });
+        
+        it('store very first call in array for later comparison of done', function () {
+            gamr.getMergeRequestsForEachProject(projects);
+            expect(gamr.getInitialMergeRequestCalls().length).toEqual(5);
+        });
+        it('should start with an empty array for each call', function() {
+            gnMock.expects('getDataRecursively').exactly(5).withArgs(any,any,any,emptyArray,any,any);
+            gamr.getMergeRequestsForEachProject(projects);
+            gnMock.verify();
+        });
+        it('bag should be initialized with requests initialized as new array ', function () {
+            var hasEmptyRequestArray = sinon.match(function (value) {
+                if (value.requests.length === 0) {
+                    return true;
+                }
+                return false;
+            }, 'has empty Requests array');
+            gnMock.expects('getDataRecursively').exactly(5).withArgs(any, any, any, any, hasEmptyRequestArray, any);
+            gamr.getMergeRequestsForEachProject(projects);
+            gnMock.verify();
+        });
+        it('bag should get 100 items per request ', function () {
+            var validate = sinon.match(function (value) {
+                if (value.per_page === 100) {
+                    return true;
+                }
+                return false;
+            }, 'per_page is not 100');
+            
+            gnMock.expects('getDataRecursively').exactly(5).withArgs(any, validate, any, any, any, any);
+            gamr.getMergeRequestsForEachProject(projects);
+            gnMock.verify();
+        });
+        it('url should have project id ', function () {
+            var validate = sinon.match(function (value) {
+                var match = false;
+                for (var j = 0; j < 5; j++) {
+                    if(value === j) {
+                        match = true;
+                        break;
+                    }
+                }
+                return match;
+            }, 'project id not found');
+            gnMock.expects('getMergeRequestUrl').exactly(5).withArgs(any, validate);
+            gnMock.expects('getDataRecursively').exactly(5).withArgs(any, any, any, any, any, any);
+            gamr.getMergeRequestsForEachProject(projects);
+            gnMock.verify();
+        });
+        
+        describe('mergeReqCompleteCallback', function() {
+            it('should call appendToOrig if there is data', function() {
+                gnMock.expects('appendToOrig').exactly(1).withArgs(sinon.match.array, sinon.match.array);
+                var data = [{ id: 1 }];
+                gamr.mergeReqCompleteCallback(data, { requests: [] });
+                gnMock.verify();
+            });
+            
+            it('should remove entry from initialMergeRequestCalls if a match was found ', function () {
+                gnMock.expects('appendToOrig').exactly(0).withArgs(sinon.match.array, sinon.match.array);
+                var calls = [{ url: 'foo' }, { url: 'bar' }];
+                gamr.setInitialMergeRequestCalls(calls);
+                gamr.mergeReqCompleteCallback([], { requests: calls });
+                var actual = gamr.getInitialMergeRequestCalls();
+                expect(actual.length).toEqual(1);
+                gnMock.verify();
+            });
+            
+            it('should invoke callback when all calls have been returned and accounted for ', function () {
+                var calls = [];
+                gamr.setInitialMergeRequestCalls(calls);
+                gamr.mergeReqCompleteCallback([], { requests: calls });
+                sinon.assert.calledOnce(completeCallBackStub);
+            });
+        });
+        
+    });
+
 
 });
