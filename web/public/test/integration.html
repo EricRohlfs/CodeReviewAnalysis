@@ -1,8 +1,9 @@
 ﻿<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Unit Tests</title>
-    <script src="/jquery-1.11.2.min/index.js"></script>
+    <title>Integration Tests</title>
+    <script src="/jquery-1.11.2.min/index.js"></script>  
+  
     <script src="/jasmine-core/lib/jasmine-core/jasmine.js"></script>
     <script src="/jasmine-core/lib/jasmine-core/jasmine-html.js"></script>
     <script src="/jasmine-core/lib/jasmine-core/boot.js"></script>
@@ -11,12 +12,11 @@
     <script src="../javascripts/gitlabApi.js"></script>
     <script src="sandbox.js"></script>
     <!-- specs -->
-    <script src="../javascripts/gitlabApi.spec.js"></script>
+    <script src="integration.js"></script>
     <link href="/jasmine-core/lib/jasmine-core/jasmine.css" rel="stylesheet" />
 </head>
     <body>
-        <h1>Unit Tests</h1>
-        <p>Unit tests should run very fast. They should not have dependencies on the DOM or a server for returning data..</p>
+        <h1>Integration Tests</h1>
         Todo: add a form to this page to accept gitlab server and the private token.  It will then add those vars to the url so we can run integration and other tests
     </body>
 </html>

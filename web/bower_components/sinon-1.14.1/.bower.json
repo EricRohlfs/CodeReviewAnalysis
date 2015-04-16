@@ -1,0 +1,15 @@
+{
+  "name": "sinon-1.14.1",
+  "_cacheHeaders": {
+    "ETag": "\"2081e6-2e909-5125660331080\"",
+    "Last-Modified": "Sat, 28 Mar 2015 10:04:34 GMT",
+    "Content-Length": "190729",
+    "Content-Type": "application/javascript"
+  },
+  "_release": "e-tag:2081e6-2e",
+  "main": "index.js",
+  "_source": "http://sinonjs.org/releases/sinon-1.14.1.js",
+  "_target": "*",
+  "_originalSource": "http://sinonjs.org/releases/sinon-1.14.1.js",
+  "_direct": true
+}
